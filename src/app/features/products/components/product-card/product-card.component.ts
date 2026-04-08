@@ -1,6 +1,6 @@
-import { Component, Input, inject, signal } from '@angular/core';
+import { Component, Input, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Product } from '../../../../core/models/product.model';
+import { Product } from '../../../../core/models/product.interface';
 import { CartService } from '../../../../core/services/cart.service';
 
 @Component({
@@ -14,6 +14,14 @@ import { CartService } from '../../../../core/services/cart.service';
         @if (product.onSale) {
           <div class="sale-badge">OFERTA</div>
         }
+        <button 
+          class="fav-btn" 
+          [class.is-fav]="isFavorite()" 
+          (click)="toggleFav(\$event)"
+          [title]="isFavorite() ? 'Quitar de favoritos' : 'Añadir a favoritos'"
+        >
+          {{ isFavorite() ? '❤️' : '🤍' }}
+        </button>
         <img [src]="product.image" [alt]="product.title">
       </div>
       <div class="content">
@@ -70,6 +78,33 @@ import { CartService } from '../../../../core/services/cart.service';
       transition: background 0.3s;
     }
 
+    .fav-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(255,255,255,0.8);
+      border: none;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      cursor: pointer;
+      z-index: 10;
+      transition: all 0.3s;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .fav-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .fav-btn.is-fav {
+      background: white;
+    }
+
     .product-card:hover .image-wrapper {
       background: #f8fafc;
     }
@@ -89,13 +124,9 @@ import { CartService } from '../../../../core/services/cart.service';
       border: 1px solid var(--glass-border);
     }
 
-    .product-card.on-sale {
-      border-color: #fca5a5;
-    }
-
     .sale-badge {
       position: absolute;
-      top: 1rem;
+      bottom: 1rem;
       right: 1rem;
       background: #ef4444;
       color: white;
@@ -158,19 +189,6 @@ import { CartService } from '../../../../core/services/cart.service';
       gap: 0.5rem;
     }
 
-    .original-price {
-      text-decoration: line-through;
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-
-    .currency {
-      color: var(--accent-primary);
-      font-weight: 600;
-      font-size: 0.9rem;
-    }
-
     .amount {
       font-size: 1.5rem;
       font-weight: 800;
@@ -196,11 +214,6 @@ import { CartService } from '../../../../core/services/cart.service';
       filter: brightness(1.1);
     }
 
-    .add-btn.added {
-      background: #10b981;
-      transform: none !important;
-    }
-
     .plus {
       font-size: 1.5rem;
       font-weight: 400;
@@ -210,12 +223,19 @@ import { CartService } from '../../../../core/services/cart.service';
 export class ProductCardComponent {
   @Input({ required: true }) product!: Product;
   private cartService = inject(CartService);
+  
   isAdded = signal(false);
+  isFavorite = computed(() => this.cartService.isFavorite(this.product.id));
 
   addToCart() {
     this.cartService.addToCart(this.product);
     this.isAdded.set(true);
     setTimeout(() => this.isAdded.set(false), 2000);
+  }
+
+  toggleFav(event: Event) {
+    event.stopPropagation();
+    this.cartService.toggleFavorite(this.product);
   }
 
   translateCategory(category: string): string {

@@ -1,17 +1,16 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProductService } from '../../../../core/services/product.service';
-import { Product } from '../../../../core/models/product.model';
-import { ProductCardComponent } from '../../components/product-card/product-card.component';
+import { Product } from '../../../../core/models/product.interface';
 import { ProductFilterComponent } from '../../components/product-filter/product-filter.component';
+import { ProductGridComponent } from '../../components/product-grid/product-grid.component';
 import { finalize } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
-import { inject as injectCore } from '@angular/core';
 
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  imports: [CommonModule, ProductCardComponent, ProductFilterComponent],
+  imports: [CommonModule, ProductFilterComponent, ProductGridComponent],
   template: `
     <div class="hero-section fade-in">
       <div class="container hero-content">
@@ -39,31 +38,11 @@ import { inject as injectCore } from '@angular/core';
         (categoryChange)="updateCategory(\$event)"
       />
 
-      <div class="product-grid">
-        @if (isLoading()) {
-          @for (n of [1,2,3,4,5,6,7,8]; track n) {
-            <div class="skeleton-card glass">
-              <div class="skele-image"></div>
-              <div class="skele-content">
-                <div class="skele-title"></div>
-                <div class="skele-text"></div>
-                <div class="skele-footer"></div>
-              </div>
-            </div>
-          }
-        } @else {
-          @for (product of filteredProducts(); track product.id) {
-            <app-product-card [product]="product" />
-          } @empty {
-            <div class="empty-state glass fade-in">
-              <span class="icon">🔍</span>
-              <h3>No se encontraron productos</h3>
-              <p>Intenta ajustar los filtros de búsqueda o categorías.</p>
-              <button (click)="resetFilters()" class="btn-primary">Limpiar filtros</button>
-            </div>
-          }
-        }
-      </div>
+      <app-product-grid 
+        [products]="filteredProducts()" 
+        [isLoading]="isLoading()" 
+        (onResetFilters)="resetFilters()"
+      />
     </div>
   `,
   styles: [`
@@ -164,46 +143,6 @@ import { inject as injectCore } from '@angular/core';
       background: var(--accent-primary);
       border-radius: 2px;
     }
-
-    .product-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 2.5rem;
-    }
-
-    /* Skeleton Loading */
-    .skeleton-card {
-      height: 450px;
-      overflow: hidden;
-      animation: pulse 1.5s infinite ease-in-out;
-      border-radius: 1.5rem;
-    }
-
-    @keyframes pulse {
-      0% { opacity: 0.4; }
-      50% { opacity: 0.2; }
-      100% { opacity: 0.4; }
-    }
-
-    .skele-image { height: 250px; background: rgba(255,255,255,0.05); }
-    .skele-content { padding: 2rem; }
-    .skele-title { height: 1.5rem; background: rgba(255,255,255,0.05); margin-bottom: 1rem; border-radius: 4px; }
-    .skele-text { height: 3rem; background: rgba(255,255,255,0.05); margin-bottom: 1rem; border-radius: 4px; }
-    .skele-footer { height: 2rem; background: rgba(255,255,255,0.05); border-radius: 4px; }
-
-    /* Empty State */
-    .empty-state {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 6rem 2rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1.5rem;
-      border-radius: 2rem;
-    }
-
-    .empty-state .icon { font-size: 4rem; }
     
     @media (max-width: 768px) {
       .hero-title { font-size: 3rem; }
@@ -261,7 +200,7 @@ export class ProductListPageComponent implements OnInit {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (data: Product[]) => this.products.set(data),
-        error: (err: any) => console.error('Error fetching products', err)
+        error: (err: Error) => console.error('Error fetching products', err)
       });
   }
 
