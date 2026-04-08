@@ -43,6 +43,7 @@
           "options": {
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
+            "outputPath": "dist/maldonado-store",
             "assets": [
               {
                 "glob": "**/*",
@@ -79,10 +80,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "angular-api-app:build:production"
+              "buildTarget": "maldonado-store:build:production"
             },
             "development": {
-              "buildTarget": "angular-api-app:build:development"
+              "buildTarget": "maldonado-store:build:development"
             }
           },
           "defaultConfiguration": "development"
